@@ -1,5 +1,7 @@
 let jsonData = null;
 let timeSeriesData = {};
+let jsonDataDE = null; // For Deep Extrema model
+let timeSeriesDataDE = {}; // For Deep Extrema model
 
 // Global variables for the parameters
 let model = null;
@@ -18,24 +20,45 @@ fetch("gcm_data_rc1.json")
     })
     .catch(error => console.error("Error loading GCM data:", error));
 
-// Fetch time series data from CSV
-fetch("gcm_data_tempvalues.csv")
-    .then(response => response.text())
+// Fetch and extract time series data from the GCM ZIP file
+fetch("gcm_data_tempvalues.csv.zip")
+    .then(response => response.arrayBuffer())
+    .then(buffer => JSZip.loadAsync(buffer))
+    .then(zip => zip.file("gcm_data_tempvalues.csv").async("text")) // Read the CSV file from the ZIP
     .then(csvData => {
-        parseCSVData(csvData);
+        parseCSVData(csvData, timeSeriesData);
     })
-    .catch(error => console.error("Error loading time series data:", error));
+    .catch(error => console.error("Error loading GCM time series data from ZIP:", error));
+
+// Fetch Deep Extrema (DE) regression coefficient data
+fetch("dl_data_rc.json")
+    .then(response => response.json())
+    .then(data => {
+        jsonDataDE = data;
+        updateParameters(); // Call updateParameters once the data is loaded
+    })
+    .catch(error => console.error("Error loading DE data:", error));
+
+// Fetch and extract time series data from the DE ZIP file
+fetch("dl_data_tempvalues.csv.zip")
+    .then(response => response.arrayBuffer())
+    .then(buffer => JSZip.loadAsync(buffer))
+    .then(zip => zip.file("dl_data_tempvalues.csv").async("text")) // Read the CSV file from the ZIP
+    .then(csvData => {
+        parseCSVData(csvData, timeSeriesDataDE);
+    })
+    .catch(error => console.error("Error loading DE time series data from ZIP:", error));
 
 // Parse the CSV time series data into an object
-function parseCSVData(csvData) {
+function parseCSVData(csvData, targetData) {
     const rows = csvData.split("\n");
     const headers = rows[0].split(","); // First row contains the dates (Jan 2025, Feb 2025, ...)
-    
+
     for (let i = 1; i < rows.length; i++) {
         const row = rows[i].split(",");
         const latLonKey = `${row[0]},${row[1]}`; // lat and lon are the first two columns
         const timeSeriesValues = row.slice(2).map(Number); // The rest are temperature values
-        timeSeriesData[latLonKey] = timeSeriesValues;
+        targetData[latLonKey] = timeSeriesValues;
     }
 }
 
@@ -44,8 +67,8 @@ function updateParameters() {
     model = modelSelect.value;
     variable = variableSelect.value;
 
-    // Check if 'gcm' model and 'ta' (temperature) variable are selected before updating map
-    if (model === "gcm" && variable === "ta") {
+    // Check if conditions are met to update the map
+    if ((model === "gcm" && variable === "ta") || (model === "de" && variable === "ta")) {
         updateMap();
     } else {
         clearMap(); // Clear the map if conditions are not met
@@ -59,12 +82,20 @@ function clearMap() {
 
 // Function to update the map based on the selected parameters
 function updateMap() {
-    if (!jsonData) {
+    let selectedJsonData;
+
+    if (model === "gcm") {
+        selectedJsonData = jsonData;
+    } else if (model === "de") {
+        selectedJsonData = jsonDataDE;
+    }
+
+    if (!selectedJsonData) {
         alert("Data not loaded yet.");
         return;
     }
 
-    const tempData = jsonData.locations.map(location => {
+    const tempData = selectedJsonData.locations.map(location => {
         return {
             lat: location.lat,
             lon: location.lon,
@@ -82,6 +113,7 @@ function updateMap() {
         marker: {
             size: 10,
             color: filteredData.map(d => d.regression_coefficient),
+            opacity: 0.2,
             colorscale: [
                 [0, "blue"],
                 [0.5, "lime"],
@@ -91,7 +123,7 @@ function updateMap() {
             cmin: Math.min(...filteredData.map(d => d.regression_coefficient)),
             cmax: Math.max(...filteredData.map(d => d.regression_coefficient)),
             colorbar: {
-                title: `Regression Coefficient`,
+                title: `Trend Coefficient`,
                 tickvals: [
                     Math.min(...filteredData.map(d => d.regression_coefficient)),
                     Math.max(...filteredData.map(d => d.regression_coefficient)),
@@ -107,24 +139,35 @@ function updateMap() {
     };
 
     const mapLayout = {
-        title: `Regression Coefficient Map`,
+        title: `Block Maxima Trend`,
         geo: {
-            projection: { type: "natural earth" },
+            projection: {
+                type: "natural earth"
+            },
             showland: true,
-            landcolor: "#e0e0e0",
-            bgcolor: "#1e1e1e",
+            landcolor: "#e0e0e0", // Color for the land
+            coastlinecolor: "black", // Black color for coastline
+            coastlinewidth: 3, // Thickness of the coastline
+            subunitcolor: "black", // Black borders between countries/states
+            subunitwidth: 3, // Thickness of country borders
+            lakes: {
+                color: "#ffffff" // Same as background color for lakes
+            },
+            bgcolor: "#ffffff" // Background color for the map
         },
-        paper_bgcolor: "#1e1e1e",
-        plot_bgcolor: "#1e1e1e",
-        font: { color: "#e0e0e0" },
+        paper_bgcolor: "#1e1e1e", // Dark background for paper
+        plot_bgcolor: "#1e1e1e", // Dark background for plot
+        font: {
+            color: "#e0e0e0" // Font color for the text
+        }
     };
 
     Plotly.newPlot("map", [mapTrace], mapLayout);
 
     document.getElementById("map").on("plotly_click", function (data) {
         const point = data.points[0];
-        const lat = point.lat.toFixed(2);
-        const lon = point.lon.toFixed(2);
+        const lat = point.lat;
+        const lon = point.lon;
         plotTimeseriesGraph(lat, lon);
         plotHistogram(lat, lon); // Call to display the histogram next to the time series graph
     });
@@ -133,7 +176,13 @@ function updateMap() {
 // Function to plot the time series graph based on latitude and longitude
 function plotTimeseriesGraph(lat, lon) {
     const latLonKey = `${lat},${lon}`;
-    const timeSeries = timeSeriesData[latLonKey];
+    let timeSeries;
+
+    if (model === "gcm") {
+        timeSeries = timeSeriesData[latLonKey];
+    } else if (model === "de") {
+        timeSeries = timeSeriesDataDE[latLonKey];
+    }
 
     if (!timeSeries) {
         alert("No time series data found for this location.");
@@ -166,7 +215,13 @@ function plotTimeseriesGraph(lat, lon) {
 // Function to plot the histogram of time series data
 function plotHistogram(lat, lon) {
     const latLonKey = `${lat},${lon}`;
-    const timeSeries = timeSeriesData[latLonKey];
+    let timeSeries;
+
+    if (model === "gcm") {
+        timeSeries = timeSeriesData[latLonKey];
+    } else if (model === "de") {
+        timeSeries = timeSeriesDataDE[latLonKey];
+    }
 
     if (!timeSeries) {
         alert("No time series data found for this location.");
@@ -193,21 +248,16 @@ function plotHistogram(lat, lon) {
     Plotly.newPlot("histogram", [trace], layout);
 }
 
-// Generate date range from Jan 2025 to Dec 2100
+// Generate date range from start date to end date
 function generateDateRange(start, end) {
-    const startDate = new Date(start + "-01");
-    const endDate = new Date(end + "-01");
     const dateArray = [];
-    let currentDate = startDate;
+    let currentDate = new Date(start);
+    const endDate = new Date(end);
 
     while (currentDate <= endDate) {
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth() + 1;
-        const formattedDate = `${year}-${month.toString().padStart(2, "0")}`;
-        dateArray.push(formattedDate);
+        dateArray.push(currentDate.toISOString().slice(0, 7)); // Format: YYYY-MM
         currentDate.setMonth(currentDate.getMonth() + 1);
     }
 
     return dateArray;
 }
-

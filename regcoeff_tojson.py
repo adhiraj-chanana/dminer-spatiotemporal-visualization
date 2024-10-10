@@ -1,8 +1,8 @@
 import csv
 import json
 
-input_csv = 'regression_coefficients.csv'  # Replace with your CSV file path
-output_json = 'gcm_data_rc.json'  # Replace with your desired JSON file path
+input_csv = 'dl_regression_coefficients.csv'  # Replace with your CSV file path
+output_json = 'dl_data_rc.json'  # Replace with your desired JSON file path
 
 data = []
 

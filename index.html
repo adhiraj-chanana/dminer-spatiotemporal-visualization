@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Temperature Map Visualization</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header class="header">
         <a href="https://www.egr.msu.edu/~ptan/dminer/" target="_blank" class="logo">
-            <h1 class="lab">DMiner Lab</h1>
+            <h1 class="lab">DMiner</h1>
             <h2 class="msu">@ MSU</h2>
         </a>
         <h1 class="title">
@@ -23,15 +24,15 @@
     <div class="menubar">
         <select name="model" id="model" onchange="updateParameters()">
             <option value="none" selected disabled>Choose a model</option>
-            <option value="gcm">GCM</option>
-            <option value="de" disabled>Deep Extrema</option>
+            <option value="gcm">GCM (CESM2 SSP585)</option>
+            <option value="de">Deep Extrema</option>
         </select>
         <select name="variable" id="variable" onchange="updateParameters()">
             <option value="none" selected disabled>Choose a variable</option>
             <option value="ta">Temperature</option>
             <option value="pa" disabled>Precipitation</option>
         </select>
-        <a class="about-link" href="http://www.cse.msu.edu/~ptan/project/xtreme/" target="_blank">
+        <a class="about-link" href="https://www.cse.msu.edu/~ptan/project/xtreme/" target="_blank">
             <div class="link-container">About</div>
         </a>
     </div>
@@ -40,7 +41,7 @@
         <div id="map"></div>
         <div class="graphs">
             <div id="timeseries"></div>
-            <div id="histogram"></div> <!-- New div for the histogram -->
+            <div id="histogram"></div> 
         </div>
     </div>
     <script src="./main.js"></script>

@@ -10,7 +10,7 @@ const modelSelect = document.getElementById("model"); // Values: gcm or de
 const variableSelect = document.getElementById("variable"); // Values: ta or pa
 
 // Fetch GCM regression coefficient data
-fetch("dl_data_rc.json")
+fetch("gcm_data_rc.json")
     .then(response => response.json())
     .then(data => {
         jsonData = data;
@@ -19,7 +19,7 @@ fetch("dl_data_rc.json")
     .catch(error => console.error("Error loading GCM data:", error));
 
 // Fetch time series data from CSV
-fetch("dl_data_tempvalues.csv")
+fetch("gcm_data_tempvalues.csv")
     .then(response => response.text())
     .then(csvData => {
         parseCSVData(csvData);
@@ -123,10 +123,9 @@ function updateMap() {
 
     document.getElementById("map").on("plotly_click", function (data) {
         const point = data.points[0];
-        const lat = point.lat;
-        const lon = point.lon;
+        const lat = point.lat.toFixed(2);
+        const lon = point.lon.toFixed(2);
         plotTimeseriesGraph(lat, lon);
-        plotHistogram(lat, lon); // Call to display the histogram next to the time series graph
     });
 }
 
@@ -163,36 +162,6 @@ function plotTimeseriesGraph(lat, lon) {
     Plotly.newPlot("timeseries", [trace], layout);
 }
 
-// Function to plot the histogram of time series data
-function plotHistogram(lat, lon) {
-    const latLonKey = `${lat},${lon}`;
-    const timeSeries = timeSeriesData[latLonKey];
-
-    if (!timeSeries) {
-        alert("No time series data found for this location.");
-        return;
-    }
-
-    const trace = {
-        x: timeSeries,
-        type: "histogram",
-        marker: {
-            color: "#FF4136",
-        },
-    };
-
-    const layout = {
-        title: `Temperature Histogram for Latitude: ${lat}, Longitude: ${lon}`,
-        xaxis: { title: "Temperature (K)" },
-        yaxis: { title: "Frequency" },
-        paper_bgcolor: "#1e1e1e",
-        plot_bgcolor: "#1e1e1e",
-        font: { color: "#e0e0e0" }
-    };
-
-    Plotly.newPlot("histogram", [trace], layout);
-}
-
 // Generate date range from Jan 2025 to Dec 2100
 function generateDateRange(start, end) {
     const startDate = new Date(start + "-01");
@@ -210,4 +179,3 @@ function generateDateRange(start, end) {
 
     return dateArray;
 }
-
