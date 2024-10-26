@@ -20,15 +20,7 @@ async function fetchGCM() {
                 jsonData = data;
             })
             .catch((error) => console.error("Error loading GCM data:", error)),
-        fetch("gcm_data_tempvalues.csv")
-            .then((response) => response.text())
-            .then((csvData) => {
-                parseCSVData(csvData);
-            })
-            .catch((error) =>
-                console.error("Error loading time series data:", error)
-            ),
-    ]);
+        ])
     // Fetch GCM regression coefficient data
 
     // Fetch time series data from CSV
@@ -47,19 +39,157 @@ async function fetchDL() {
                 jsonData = data;
             })
             .catch((error) => console.error("Error loading GCM data:", error)),
-
-        // Fetch time series data from CSV
-        fetch("dl_data_tempvalues.csv")
-            .then((response) => response.text())
-            .then((csvData) => {
-                parseCSVData(csvData);
-            })
-            .catch((error) =>
-                console.error("Error loading time series data:", error)
-            ),
-    ]);
+    ])
     // Fetch GCM regression coefficient data
 }
+async function fetchFileForLatgcm(lat) {
+    // Determine which file to load based on the lat value.
+    let fileIndex;
+
+    if (lat <= -85.28795811518324) {
+        fileIndex = 1;
+    } else if (lat > -85.28795811518324 && lat <= -79.63350785340315) {
+        fileIndex = 2;
+    } else if (lat > -79.63350785340315 && lat <= -73.97905759162303) {
+        fileIndex = 3;
+    } else if (lat > -73.97905759162303 && lat <= -68.32460732984293) {
+        fileIndex = 4;
+    } else if (lat > -68.32460732984293 && lat <= -62.67015706806283) {
+        fileIndex = 5;
+    } else if (lat > -62.67015706806283 && lat <= -57.01570680628272) {
+        fileIndex = 6;
+    } else if (lat > -57.01570680628272 && lat <= -51.361256544502616) {
+        fileIndex = 7;
+    } else if (lat > -51.361256544502616 && lat <= -45.70680628272251) {
+        fileIndex = 8;
+    } else if (lat > -45.70680628272251 && lat <= -40.05235602094241) {
+        fileIndex = 9;
+    } else if (lat > -40.05235602094241 && lat <= -34.397905759162306) {
+        fileIndex = 10;
+    } else if (lat > -34.397905759162306 && lat <= -28.7434554973822) {
+        fileIndex = 11;
+    } else if (lat > -28.7434554973822 && lat <= -23.0890052356021) {
+        fileIndex = 12;
+    } else if (lat > -23.0890052356021 && lat <= -17.43455497382199) {
+        fileIndex = 13;
+    } else if (lat > -17.43455497382199 && lat <= -11.78010471204189) {
+        fileIndex = 14;
+    } else if (lat > -11.78010471204189 && lat <= -6.125654450261777) {
+        fileIndex = 15;
+    } else if (lat > -6.125654450261777 && lat <= -0.4712041884816784) {
+        fileIndex = 16;
+    } else if (lat > -0.4712041884816784 && lat <= 5.1832460732984345) {
+        fileIndex = 17;
+    } else if (lat > 5.1832460732984345 && lat <= 10.837696335078531) {
+        fileIndex = 18;
+    } else if (lat > 10.837696335078531 && lat <= 16.492146596858632) {
+        fileIndex = 19;
+    } else if (lat > 16.492146596858632 && lat <= 22.146596858638745) {
+        fileIndex = 20;
+    } else if (lat > 22.146596858638745 && lat <= 27.801047120418843) {
+        fileIndex = 21;
+    } else if (lat > 27.801047120418843 && lat <= 33.455497382198956) {
+        fileIndex = 22;
+    } else if (lat > 33.455497382198956 && lat <= 39.10994764397907) {
+        fileIndex = 23;
+    } else if (lat > 39.10994764397907 && lat <= 44.764397905759154) {
+        fileIndex = 24;
+    } else if (lat > 44.764397905759154 && lat <= 50.41884816753927) {
+        fileIndex = 25;
+    } else if (lat > 50.41884816753927 && lat <= 56.07329842931938) {
+        fileIndex = 26;
+    } else if (lat > 56.07329842931938 && lat <= 61.727748691099464) {
+        fileIndex = 27;
+    } else if (lat > 61.727748691099464 && lat <= 67.38219895287958) {
+        fileIndex = 28;
+    } else if (lat > 67.38219895287958 && lat <= 73.03664921465969) {
+        fileIndex = 29;
+    } else if (lat > 73.03664921465969 && lat <= 78.6910994764398) {
+        fileIndex = 30;
+    } else if (lat > 78.6910994764398 && lat <= 84.34554973821989) {
+        fileIndex = 31;
+    } else if (lat > 84.34554973821989 && lat <= 90.0) {
+        fileIndex = 32;
+    }
+    
+    // Fetch the corresponding file
+    const fileName = `gcm/split_${fileIndex}.csv`;
+    console.log("array index is ",fileName)
+    return fetch(fileName)
+        .then((response) => response.text())
+        .then((csvData) => {
+            parseCSVData(csvData); // Re-parse and store the new data in `timeSeriesData`
+        })
+        .catch((error) => console.error("Error loading CSV file:", error));
+}
+
+async function fetchFileForLatdl(lat) {
+    // Determine which file to load based on the lat value.
+    let fileIndex;
+
+    if (lat >= 83.75) {
+        fileIndex = 1;
+    } else if (lat < 83.75 && lat >= 76.25) {
+        fileIndex = 2;
+    } else if (lat < 76.25 && lat >= 68.75) {
+        fileIndex = 3;
+    } else if (lat < 68.75 && lat >= 61.25) {
+        fileIndex = 4;
+    } else if (lat < 61.25 && lat >= 53.75) {
+        fileIndex = 5;
+    } else if (lat < 53.75 && lat >= 46.25) {
+        fileIndex = 6;
+    } else if (lat < 46.25 && lat >= 38.75) {
+        fileIndex = 7;
+    } else if (lat < 38.75 && lat >= 31.25) {
+        fileIndex = 8;
+    } else if (lat < 31.25 && lat >= 23.75) {
+        fileIndex = 9;
+    } else if (lat < 23.75 && lat >= 16.25) {
+        fileIndex = 10;
+    } else if (lat < 16.25 && lat >= 8.75) {
+        fileIndex = 11;
+    } else if (lat < 8.75 && lat >= 1.25) {
+        fileIndex = 12;
+    } else if (lat < 1.25 && lat >= -6.25) {
+        fileIndex = 13;
+    } else if (lat < -6.25 && lat >= -13.75) {
+        fileIndex = 14;
+    } else if (lat < -13.75 && lat >= -21.25) {
+        fileIndex = 15;
+    } else if (lat < -21.25 && lat >= -28.75) {
+        fileIndex = 16;
+    } else if (lat < -28.75 && lat >= -36.25) {
+        fileIndex = 17;
+    } else if (lat < -36.25 && lat >= -43.75) {
+        fileIndex = 18;
+    } else if (lat < -43.75 && lat >= -51.25) {
+        fileIndex = 19;
+    } else if (lat < -51.25 && lat >= -58.75) {
+        fileIndex = 20;
+    } else if (lat < -58.75 && lat >= -66.25) {
+        fileIndex = 21;
+    } else if (lat < -66.25 && lat >= -73.75) {
+        fileIndex = 22;
+    } else if (lat < -73.75 && lat >= -81.25) {
+        fileIndex = 23;
+    } else if (lat < -81.25 && lat >= -88.75) {
+        fileIndex = 24;
+    } else if (lat < -88.75 && lat >= -90.0) {
+        fileIndex = 25;
+    }
+    
+    // Fetch the corresponding file
+    const fileName = `dl/split_${fileIndex}.csv`;
+    console.log("array index is ",fileName)
+    return fetch(fileName)
+        .then((response) => response.text())
+        .then((csvData) => {
+            parseCSVData(csvData); // Re-parse and store the new data in `timeSeriesData`
+        })
+        .catch((error) => console.error("Error loading CSV file:", error));
+}
+
 
 // Parse the CSV time series data into an object
 function parseCSVData(csvData) {
@@ -215,7 +345,13 @@ async function updateMap(model) {
 
 // Function to plot the time series graph based on latitude and longitude
 // FIXME: NEEDS FIXING. LATLONKEY NOT FOUND IN TIMESERIESDATA EVEN THOUGH LOADING CORRECTLY
-function plotTimeseriesGraph(lat, lon) {
+async function plotTimeseriesGraph(lat, lon) {
+    if (model==="gcm"){
+       await fetchFileForLatgcm(lat);
+    }
+    else{
+        await fetchFileForLatdl(lat)
+    }
     const latLonKey = `${lat},${lon}`;
     console.log(latLonKey);
     console.log(timeSeriesData);
@@ -251,7 +387,13 @@ function plotTimeseriesGraph(lat, lon) {
 
 // Function to plot the histogram of time series data
 // FIXME: NEEDS FIXING. LATLONKEY NOT FOUND IN TIMESERIESDATA EVEN THOUGH LOADING CORRECTLY
-function plotHistogram(lat, lon) {
+async function plotHistogram(lat, lon) {
+    if (model==="gcm"){
+        await fetchFileForLatgcm(lat)
+    }
+    else{
+        await fetchFileForLatdl(lat)
+    }
     const latLonKey = `${lat},${lon}`;
     const timeSeries = timeSeriesData[latLonKey];
 
