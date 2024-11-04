@@ -20,7 +20,7 @@ async function fetchGCM() {
                 jsonData = data;
             })
             .catch((error) => console.error("Error loading GCM data:", error)),
-        ])
+    ]);
     // Fetch GCM regression coefficient data
 
     // Fetch time series data from CSV
@@ -39,7 +39,7 @@ async function fetchDL() {
                 jsonData = data;
             })
             .catch((error) => console.error("Error loading GCM data:", error)),
-    ])
+    ]);
     // Fetch GCM regression coefficient data
 }
 async function fetchFileForLatgcm(lat) {
@@ -111,10 +111,10 @@ async function fetchFileForLatgcm(lat) {
     } else if (lat > 84.34554973821989 && lat <= 90.0) {
         fileIndex = 32;
     }
-    
+
     // Fetch the corresponding file
     const fileName = `gcm/split_${fileIndex}.csv`;
-    console.log("array index is ",fileName)
+    console.log("array index is ", fileName);
     return fetch(fileName)
         .then((response) => response.text())
         .then((csvData) => {
@@ -178,10 +178,10 @@ async function fetchFileForLatdl(lat) {
     } else if (lat < -88.75 && lat >= -90.0) {
         fileIndex = 25;
     }
-    
+
     // Fetch the corresponding file
     const fileName = `dl/split_${fileIndex}.csv`;
-    console.log("array index is ",fileName)
+    console.log("array index is ", fileName);
     return fetch(fileName)
         .then((response) => response.text())
         .then((csvData) => {
@@ -189,7 +189,6 @@ async function fetchFileForLatdl(lat) {
         })
         .catch((error) => console.error("Error loading CSV file:", error));
 }
-
 
 // Parse the CSV time series data into an object
 function parseCSVData(csvData) {
@@ -208,11 +207,9 @@ function parseCSVData(csvData) {
 // Function to update model and variable selections
 function updateParameters() {
     // Both the select menus
-    model = document.querySelector('input[name="model"]:checked')?.value;
-    variable = document.querySelector('input[name="variable"]:checked')?.value;
-    statistics = document.querySelector(
-        'input[name="statistics"]:checked'
-    )?.value;
+    model = document.getElementById("modelSelect").value;
+    variable = document.getElementById("variableSelect").value;
+    statistics = document.getElementById("statisticsSelect").value;
 
     // Check if 'gcm' model and 'ta' (temperature) variable are selected before updating map
     if (model === "gcm") {
@@ -226,6 +223,7 @@ function updateParameters() {
     } else {
         clearMap(); // Clear the map if conditions are not met
     }
+    closeModal();
 }
 
 // Function to clear the map when conditions are not met
@@ -346,11 +344,10 @@ async function updateMap(model) {
 // Function to plot the time series graph based on latitude and longitude
 // FIXME: NEEDS FIXING. LATLONKEY NOT FOUND IN TIMESERIESDATA EVEN THOUGH LOADING CORRECTLY
 async function plotTimeseriesGraph(lat, lon) {
-    if (model==="gcm"){
-       await fetchFileForLatgcm(lat);
-    }
-    else{
-        await fetchFileForLatdl(lat)
+    if (model === "gcm") {
+        await fetchFileForLatgcm(lat);
+    } else {
+        await fetchFileForLatdl(lat);
     }
     const latLonKey = `${lat},${lon}`;
     console.log(latLonKey);
@@ -374,7 +371,9 @@ async function plotTimeseriesGraph(lat, lon) {
     };
 
     const layout = {
-        title: `Time Series Data for Latitude: ${lat}, Longitude: ${lon}`,
+        title: `Time Series Data for Latitude:${lat.toFixed(
+            2
+        )}, Longitude: ${lon.toFixed(2)}`,
         xaxis: { title: "Date" },
         yaxis: { title: "Temperature (K)" },
         paper_bgcolor: "#1e1e1e",
@@ -388,11 +387,10 @@ async function plotTimeseriesGraph(lat, lon) {
 // Function to plot the histogram of time series data
 // FIXME: NEEDS FIXING. LATLONKEY NOT FOUND IN TIMESERIESDATA EVEN THOUGH LOADING CORRECTLY
 async function plotHistogram(lat, lon) {
-    if (model==="gcm"){
-        await fetchFileForLatgcm(lat)
-    }
-    else{
-        await fetchFileForLatdl(lat)
+    if (model === "gcm") {
+        await fetchFileForLatgcm(lat);
+    } else {
+        await fetchFileForLatdl(lat);
     }
     const latLonKey = `${lat},${lon}`;
     const timeSeries = timeSeriesData[latLonKey];
@@ -411,7 +409,9 @@ async function plotHistogram(lat, lon) {
     };
 
     const layout = {
-        title: `Temperature Histogram for Latitude: ${lat}, Longitude: ${lon}`,
+        title: `Temperature Histogram for Latitude: ${lat.toFixed(
+            2
+        )}, Longitude: ${lon.toFixed(2)}`,
         xaxis: { title: "Temperature (K)" },
         yaxis: { title: "Frequency" },
         paper_bgcolor: "#1e1e1e",
@@ -451,9 +451,10 @@ openModalBtn.onclick = function () {
 };
 
 // Function to close the modal when clicking the close button
-closeModalBtn.onclick = function () {
+function closeModal() {
     modal.style.display = "none";
-};
+}
+closeModalBtn.onclick = closeModal;
 
 // Function to close the modal when clicking outside the modal content
 window.onclick = function (event) {

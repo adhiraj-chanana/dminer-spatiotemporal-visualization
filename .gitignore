@@ -1,0 +1,4 @@
+*.csv
+*.json
+gcm/*.txt
+dl/*.txt
