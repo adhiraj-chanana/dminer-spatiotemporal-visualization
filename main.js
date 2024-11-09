@@ -8,39 +8,55 @@ let timeSeriesData = {};
 let chosen = null;
 
 async function fetchGCM() {
-    if (chosen == "GCM") {
-        return;
-    }
+    jsonData = {}; // Clear jsonData to avoid stale data
+    if (chosen === "GCM") return;
     chosen = "GCM";
-
-    return Promise.all([
-        fetch("gcm_data_rc.json")
-            .then((response) => response.json())
-            .then((data) => {
-                jsonData = data;
-            })
-            .catch((error) => console.error("Error loading GCM data:", error)),
-    ]);
-    // Fetch GCM regression coefficient data
-
-    // Fetch time series data from CSV
+    try {
+        const response = await fetch("gcm_data_rc.json");
+        jsonData = await response.json();
+    } catch (error) {
+        console.error("Error loading GCM data:", error);
+    }
 }
 
 async function fetchDL() {
-    if (chosen == "DL") {
-        return;
-    }
+    jsonData = {}; // Clear jsonData to avoid stale data
+    if (chosen === "DL") return;
     chosen = "DL";
+    try {
+        const response = await fetch("dl_ta_data_rc.json");
+        jsonData = await response.json();
+    } catch (error) {
+        console.error("Error loading DL data:", error);
+    }
+}
+async function fetchStatisticData(statistic) {
+    jsonData = {}; // Clear jsonData to avoid stale data
+    chosen = "GCM";
+    let fileUrl = "";
 
-    return Promise.all([
-        fetch("dl_ta_data_rc.json")
-            .then((response) => response.json())
-            .then((data) => {
-                jsonData = data;
-            })
-            .catch((error) => console.error("Error loading GCM data:", error)),
-    ]);
-    // Fetch GCM regression coefficient data
+    switch (statistic) {
+        case "Mean":
+            fileUrl = "gcm_data_mean.json";
+            break;
+        case "Scale":
+            fileUrl = "gcm_data_scale.json";
+            break;
+        case "Shape":
+            fileUrl = "gcm_data_shape.json";
+            break;
+        case "Trend":
+        default:
+            fileUrl = "gcm_data_rc.json";
+            break;
+    }
+
+    try {
+        const response = await fetch(fileUrl);
+        jsonData = await response.json();
+    } catch (error) {
+        console.error(`Error loading ${statistic} data:`, error);
+    }
 }
 async function fetchFileForLatgcm(lat) {
     // Determine which file to load based on the lat value.
@@ -210,19 +226,7 @@ function updateParameters() {
     model = document.getElementById("modelSelect").value;
     variable = document.getElementById("variableSelect").value;
     statistics = document.getElementById("statisticsSelect").value;
-
-    // Check if 'gcm' model and 'ta' (temperature) variable are selected before updating map
-    if (model === "gcm") {
-        if (variable == "ta") {
-            updateMap("GCM");
-        }
-    } else if (model == "dl") {
-        if (variable == "ta") {
-            updateMap("DL");
-        }
-    } else {
-        clearMap(); // Clear the map if conditions are not met
-    }
+    updateMap();
     closeModal();
 }
 
@@ -232,14 +236,13 @@ function clearMap() {
 }
 
 // Function to update the map based on the selected parameters
-async function updateMap(model) {
-    if (model == "GCM") {
-        await fetchGCM();
-    } else {
+async function updateMap() {
+    if (model === "gcm") {
+        await fetchStatisticData(statistics);
+    } else if (model === "dl") {
         await fetchDL();
     }
-
-    if (!jsonData) {
+    if (!jsonData || Object.keys(jsonData).length === 0) {
         alert("Data not loaded yet.");
         return;
     }
@@ -278,7 +281,7 @@ async function updateMap(model) {
                 ...filteredData.map((d) => d.regression_coefficient)
             ),
             colorbar: {
-                title: `Trend Coefficient`,
+                title: statistics,
                 tickvals: [
                     Math.min(
                         ...filteredData.map((d) => d.regression_coefficient)
@@ -290,24 +293,24 @@ async function updateMap(model) {
                 ticktext: [
                     `${Math.min(
                         ...filteredData.map((d) => d.regression_coefficient)
-                    ).toFixed(2)}`,
+                    )}`,
                     `${Math.max(
                         ...filteredData.map((d) => d.regression_coefficient)
-                    ).toFixed(2)}`,
+                    )}`,
                 ],
             },
         },
         text: filteredData.map(
             (d) =>
-                `(${d.lat.toFixed(2)}, ${d.lon.toFixed(
+                `(${d.lat}, ${d.lon.toFixed(
                     2
-                )}): ${d.regression_coefficient.toFixed(2)}`
+                )}): ${d.regression_coefficient}`
         ),
         hoverinfo: "text+lat+lon",
     };
 
     const mapLayout = {
-        title: `Block Maxima Trend`,
+        title: `Block Maxima`,
         geo: {
             projection: {
                 type: "natural earth",
@@ -382,6 +385,7 @@ async function plotTimeseriesGraph(lat, lon) {
     };
 
     Plotly.newPlot("timeseries", [trace], layout);
+    createDownloadLink(dates, timeSeries, lat, lon);
 }
 
 // Function to plot the histogram of time series data
@@ -462,3 +466,26 @@ window.onclick = function (event) {
         modal.style.display = "none";
     }
 };
+function createDownloadLink(dates, timeSeries, lat, lon) {
+    // Prepare CSV content
+    let csvContent = "data:text/csv;charset=utf-8,Date,Temperature\n";
+    dates.forEach((date, index) => {
+        csvContent += `${date},${timeSeries[index]}\n`;
+    });
+
+    // Encode CSV content as a URI
+    const encodedUri = encodeURI(csvContent);
+
+    // Create a download link element
+    const downloadLink = document.createElement("a");
+    downloadLink.href = encodedUri;
+    downloadLink.download = `timeseries_lat${lat}_lon${lon}.csv`;
+    downloadLink.textContent = "Download Time Series Data";
+    downloadLink.style.display = "block";
+    downloadLink.style.marginTop = "10px";
+    downloadLink.style.color = "#17BECF";
+
+    // Append the download link to the timeseries div
+    const timeseriesDiv = document.getElementById("timeseries");
+    timeseriesDiv.appendChild(downloadLink);
+}
