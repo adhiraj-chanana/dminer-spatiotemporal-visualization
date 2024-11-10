@@ -293,20 +293,20 @@ async function updateMap() {
                 ticktext: [
                     `${Math.min(
                         ...filteredData.map((d) => d.regression_coefficient)
-                    )}`,
+                    ).toFixed(2)}`,
                     `${Math.max(
                         ...filteredData.map((d) => d.regression_coefficient)
-                    )}`,
+                    ).toFixed(2)}`,
                 ],
             },
         },
         text: filteredData.map(
             (d) =>
-                `(${d.lat}, ${d.lon.toFixed(
+                `(${d.lat.toFixed(2)}°,${d.lon.toFixed(
                     2
-                )}): ${d.regression_coefficient}`
+                )}°): ${d.regression_coefficient.toFixed(2)}`
         ),
-        hoverinfo: "text+lat+lon",
+        hoverinfo: "text",
     };
 
     const mapLayout = {
