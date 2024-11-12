@@ -30,7 +30,7 @@ async function fetchDL() {
         console.error("Error loading DL data:", error);
     }
 }
-async function fetchStatisticData(statistic) {
+async function gcm_fetchStatisticData(statistic) {
     jsonData = {}; // Clear jsonData to avoid stale data
     chosen = "GCM";
     let fileUrl = "";
@@ -48,6 +48,34 @@ async function fetchStatisticData(statistic) {
         case "Trend":
         default:
             fileUrl = "gcm_data_rc.json";
+            break;
+    }
+
+    try {
+        const response = await fetch(fileUrl);
+        jsonData = await response.json();
+    } catch (error) {
+        console.error(`Error loading ${statistic} data:`, error);
+    }
+}
+async function dl_fetchStatisticData(statistic) {
+    jsonData = {}; // Clear jsonData to avoid stale data
+    chosen = "DL";
+    let fileUrl = "";
+
+    switch (statistic) {
+        case "Mean":
+            fileUrl = "dl_data_mean.json";
+            break;
+        case "Scale":
+            fileUrl = "dl_data_scale.json";
+            break;
+        case "Shape":
+            fileUrl = "dl_data_shape.json";
+            break;
+        case "Trend":
+        default:
+            fileUrl = "dl_ta_data_rc.json";
             break;
     }
 
@@ -238,9 +266,9 @@ function clearMap() {
 // Function to update the map based on the selected parameters
 async function updateMap() {
     if (model === "gcm") {
-        await fetchStatisticData(statistics);
+        await gcm_fetchStatisticData(statistics);
     } else if (model === "dl") {
-        await fetchDL();
+        await dl_fetchStatisticData(statistics);
     }
     if (!jsonData || Object.keys(jsonData).length === 0) {
         alert("Data not loaded yet.");
