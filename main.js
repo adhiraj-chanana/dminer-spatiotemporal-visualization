@@ -338,7 +338,7 @@ async function updateMap() {
     };
 
     const mapLayout = {
-        title: `Block Maxima`,
+        title: `Block Maxima ${statistics}`,
         geo: {
             projection: {
                 type: "natural earth",

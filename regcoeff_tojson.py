@@ -1,8 +1,8 @@
 import csv
 import json
 
-input_csv = 'additional_stats_dl_temp.csv'  # Replace with your CSV file path
-output_json = 'dl_data_scale.json'  # Replace with your desired JSON file path
+input_csv = 'additional_stats_gcm_temp.csv'  # Replace with your CSV file path
+output_json = 'gcm_data_shape.json'  # Replace with your desired JSON file path
 
 data = []
 
@@ -15,8 +15,8 @@ with open(input_csv, mode='r') as csv_file:
         # Convert and round the regression coefficient
         lat = float(row['lat'])
         lon = float(row['lon'])
-        regression_coefficient = float(row['scale'])
-        rounded_regression_coefficient =regression_coefficient*(10**(3))
+        regression_coefficient = float(row['shape'])
+        rounded_regression_coefficient =regression_coefficient
         
         # Add to the data list
         data.append({
