@@ -7,6 +7,20 @@ let statistics = null;
 let timeSeriesData = {};
 let chosen = null;
 
+const range = {
+    scale: [0, 25],
+    shape: [0, 1],
+    mean: [230, 320],
+    regression_coefficient: [-10, 25],
+};
+
+const headings = {
+    scale: "Scale",
+    shape: "Shape",
+    mean: "Mean",
+    regression_coefficient: "Trend",
+};
+
 async function fetchGCM() {
     jsonData = {}; // Clear jsonData to avoid stale data
     if (chosen === "GCM") return;
@@ -36,16 +50,16 @@ async function gcm_fetchStatisticData(statistic) {
     let fileUrl = "";
 
     switch (statistic) {
-        case "Mean":
+        case "mean":
             fileUrl = "gcm_data_mean.json";
             break;
-        case "Scale":
+        case "scale":
             fileUrl = "gcm_data_scale.json";
             break;
-        case "Shape":
+        case "shape":
             fileUrl = "gcm_data_shape.json";
             break;
-        case "Trend":
+        case "regression_coefficient":
         default:
             fileUrl = "gcm_data_rc.json";
             break;
@@ -64,18 +78,18 @@ async function dl_fetchStatisticData(statistic) {
     let fileUrl = "";
 
     switch (statistic) {
-        case "Mean":
+        case "mean":
             fileUrl = "dl_data_mean.json";
             break;
-        case "Scale":
+        case "scale":
             fileUrl = "dl_data_scale.json";
             break;
-        case "Shape":
+        case "shape":
             fileUrl = "dl_data_shape.json";
             break;
-        case "Trend":
+        case "regression_coefficient":
         default:
-            fileUrl = "dl_ta_data_rc.json";
+            fileUrl = "dl_data_rc.json";
             break;
     }
 
@@ -276,10 +290,11 @@ async function updateMap() {
     }
 
     const tempData = jsonData.locations.map((location) => {
+        console.log(location[statistics], statistics);
         return {
             lat: location.lat,
             lon: location.lon,
-            regression_coefficient: location.regression_coefficient,
+            regression_coefficient: location[statistics],
         };
     });
 
@@ -302,29 +317,14 @@ async function updateMap() {
                 [0.75, "yellow"],
                 [1, "red"],
             ],
-            cmin: Math.min(
-                ...filteredData.map((d) => d.regression_coefficient)
-            ),
-            cmax: Math.max(
-                ...filteredData.map((d) => d.regression_coefficient)
-            ),
+            cmin: range[statistics][0],
+            cmax: range[statistics][1],
             colorbar: {
-                title: statistics,
-                tickvals: [
-                    Math.min(
-                        ...filteredData.map((d) => d.regression_coefficient)
-                    ),
-                    Math.max(
-                        ...filteredData.map((d) => d.regression_coefficient)
-                    ),
-                ],
+                title: headings[statistics],
+                tickvals: [range[statistics][0], range[statistics][1]],
                 ticktext: [
-                    `${Math.min(
-                        ...filteredData.map((d) => d.regression_coefficient)
-                    ).toFixed(2)}`,
-                    `${Math.max(
-                        ...filteredData.map((d) => d.regression_coefficient)
-                    ).toFixed(2)}`,
+                    `${range[statistics][0]}`,
+                    `${range[statistics][1]}`,
                 ],
             },
         },
@@ -338,7 +338,7 @@ async function updateMap() {
     };
 
     const mapLayout = {
-        title: `Block Maxima ${statistics}`,
+        title: `Block Maxima ${headings[statistics]}`,
         geo: {
             projection: {
                 type: "natural earth",
@@ -505,7 +505,7 @@ function createDownloadLink(dates, timeSeries, lat, lon) {
     const encodedUri = encodeURI(csvContent);
 
     // Create a download link element
-    const downloadLink = document.createElement("a");
+    const downloadLink = document.getElementById("downloadLink");
     downloadLink.href = encodedUri;
     downloadLink.download = `timeseries_lat${lat}_lon${lon}.csv`;
     downloadLink.textContent = "Download Time Series Data";

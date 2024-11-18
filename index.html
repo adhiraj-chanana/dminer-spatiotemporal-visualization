@@ -48,7 +48,9 @@
         <div class="container">
             <div id="map"></div>
             <div class="graphs">
-                <div id="timeseries"></div>
+                <div id="timeseries">
+                    <a href="#" id="downloadLink"></a>
+                </div>
                 <div id="histogram"></div>
                 <!-- New div for the histogram -->
             </div>
@@ -79,10 +81,12 @@
                             ><b>Statistics to plot</b></label
                         >
                         <select id="statisticsSelect" name="statistics">
-                            <option value="Trend">Trend Coefficient</option>
-                            <option value="Mean" >Mean</option>
-                            <option value="Scale">Scale</option>
-                            <option value="Shape">Shape</option>
+                            <option value="regression_coefficient">
+                                Trend Coefficient
+                            </option>
+                            <option value="mean">Mean</option>
+                            <option value="scale">Scale</option>
+                            <option value="shape">Shape</option>
                         </select>
                     </div>
                 </div>
