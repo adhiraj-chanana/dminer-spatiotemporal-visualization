@@ -89,7 +89,7 @@ async function dl_fetchStatisticData(statistic) {
             break;
         case "regression_coefficient":
         default:
-            fileUrl = "dl_data_rc.json";
+            fileUrl = "dl_ta_data_rc.json";
             break;
     }
 
@@ -380,9 +380,8 @@ async function plotTimeseriesGraph(lat, lon) {
     } else {
         await fetchFileForLatdl(lat);
     }
+
     const latLonKey = `${lat},${lon}`;
-    console.log(latLonKey);
-    console.log(timeSeriesData);
     const timeSeries = timeSeriesData[latLonKey];
 
     if (!timeSeries) {
@@ -392,19 +391,20 @@ async function plotTimeseriesGraph(lat, lon) {
 
     const dates = generateDateRange("2025-01", "2100-12");
 
+    const formattedLat = `${Math.abs(lat).toFixed(2)}° ${lat >= 0 ? "N" : "S"}`;
+    const formattedLon = `${Math.abs(lon).toFixed(2)}° ${lon >= 0 ? "E" : "W"}`;
+
     const trace = {
         x: dates,
         y: timeSeries,
         mode: "lines",
         type: "scatter",
-        name: `Lat: ${lat}, Lon: ${lon}`,
+        name: `Lat: ${formattedLat}, Lon: ${formattedLon}`,
         line: { color: "#17BECF" },
     };
 
     const layout = {
-        title: `Time Series Data for Latitude:${lat.toFixed(
-            2
-        )}, Longitude: ${lon.toFixed(2)}`,
+        title: `Time Series Data for Latitude: ${formattedLat}, Longitude: ${formattedLon}`,
         xaxis: { title: "Date" },
         yaxis: { title: "Temperature (K)" },
         paper_bgcolor: "#1e1e1e",
@@ -416,6 +416,7 @@ async function plotTimeseriesGraph(lat, lon) {
     createDownloadLink(dates, timeSeries, lat, lon);
 }
 
+
 // Function to plot the histogram of time series data
 // FIXME: NEEDS FIXING. LATLONKEY NOT FOUND IN TIMESERIESDATA EVEN THOUGH LOADING CORRECTLY
 async function plotHistogram(lat, lon) {
@@ -424,6 +425,7 @@ async function plotHistogram(lat, lon) {
     } else {
         await fetchFileForLatdl(lat);
     }
+
     const latLonKey = `${lat},${lon}`;
     const timeSeries = timeSeriesData[latLonKey];
 
@@ -431,6 +433,9 @@ async function plotHistogram(lat, lon) {
         alert("No time series data found for this location.");
         return;
     }
+
+    const formattedLat = `${Math.abs(lat).toFixed(2)}° ${lat >= 0 ? "N" : "S"}`;
+    const formattedLon = `${Math.abs(lon).toFixed(2)}° ${lon >= 0 ? "E" : "W"}`;
 
     const trace = {
         x: timeSeries,
@@ -441,9 +446,7 @@ async function plotHistogram(lat, lon) {
     };
 
     const layout = {
-        title: `Temperature Histogram for Latitude: ${lat.toFixed(
-            2
-        )}, Longitude: ${lon.toFixed(2)}`,
+        title: `Temperature Histogram for Latitude: ${formattedLat}, Longitude: ${formattedLon}`,
         xaxis: { title: "Temperature (K)" },
         yaxis: { title: "Frequency" },
         paper_bgcolor: "#1e1e1e",
@@ -504,8 +507,15 @@ function createDownloadLink(dates, timeSeries, lat, lon) {
     // Encode CSV content as a URI
     const encodedUri = encodeURI(csvContent);
 
-    // Create a download link element
-    const downloadLink = document.getElementById("downloadLink");
+    // Check if a download link already exists and remove it
+    const existingLink = document.getElementById("downloadLink");
+    if (existingLink) {
+        existingLink.remove();
+    }
+
+    // Create a new download link element
+    const downloadLink = document.createElement("a");
+    downloadLink.id = "downloadLink";
     downloadLink.href = encodedUri;
     downloadLink.download = `timeseries_lat${lat}_lon${lon}.csv`;
     downloadLink.textContent = "Download Time Series Data";
